@@ -1,20 +1,19 @@
 #![allow(dead_code)]
 #![allow(unused_imports)]
 
-use commands::parse_command;
+use commands::{parse_command, CommandParseError};
 use std::io::{self, Write};
 
 mod commands;
 
-fn eval(input: &str) -> String {
+fn eval(input: &str) -> Option<String> {
     let trimmed_input = input.trim_end_matches("\n");
 
     let command = parse_command(trimmed_input);
-    if let Err(_) = command {
-        return format!("{}: command not found", &trimmed_input);
+    match command {
+        Err(CommandParseError(message)) => Some(format!("{}: {}", &trimmed_input, &message)),
+        Ok(command) => command.execute(),
     }
-
-    unreachable!();
 }
 
 fn main() {
@@ -27,7 +26,9 @@ fn main() {
         let mut input = String::new();
         stdin.read_line(&mut input).unwrap();
 
-        let output = eval(&input);
-        println!("{}", output);
+        if input.len() > 1 {
+            let output = eval(&input);
+            println!("{}", output.unwrap_or("".to_owned()));
+        }
     }
 }
