@@ -70,7 +70,7 @@ impl Command {
                         if BUILTIN_COMMANDS.contains(&command_name.as_str()) {
                             format!("{} is a shell builtin", command_name)
                         } else {
-                            format!("{}: command not found", command_name)
+                            format!("{}: not found", command_name)
                         }
                     })
                     .collect::<Vec<_>>()
