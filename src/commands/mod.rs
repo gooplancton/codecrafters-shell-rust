@@ -9,7 +9,7 @@ pub struct CommandParseError();
 
 pub fn parse_command(input: &str) -> Result<Command, CommandParseError> {
     match input {
-        "bye" => Ok(Command::Exit()),
+//        "bye" => Ok(Command::Exit()),
         _ => Err(CommandParseError()),
     }
 }
