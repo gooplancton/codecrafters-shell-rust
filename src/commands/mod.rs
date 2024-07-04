@@ -22,6 +22,8 @@ pub fn parse_command(input: &str) -> Result<Command, CommandParseError> {
                 .parse::<i32>()
                 .map_err(|err| CommandParseError(err.to_string()))?,
         )),
+        // &["exit", _, _] => Err(CommandParseError("too many arguments".to_string())),
+        // &["echo", rest @ ..] => Ok(Command::Echo(rest.join(" "))),
         _ => Err(CommandParseError("command not found".to_owned())),
     }
 }
@@ -35,4 +37,3 @@ impl Command {
         }
     }
 }
-
