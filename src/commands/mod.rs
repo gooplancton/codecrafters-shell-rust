@@ -1,5 +1,3 @@
-#[allow(dead_code)]
-
 type NewDir = String;
 pub enum Command {
     ChangeDir(NewDir),
