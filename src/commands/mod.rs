@@ -6,6 +6,7 @@ type StatusCode = i32;
 pub enum Command {
     Exit(StatusCode),
     Echo(String),
+    Type(Vec<String>),
     ChangeDir(NewDir),
 }
 
@@ -16,6 +17,8 @@ pub struct ParseCommandResult {
     pub command_name: String,
     pub command: Result<Command, ParseCommandError>,
 }
+
+const BUILTIN_COMMANDS: [&str; 3] = ["exit", "echo", "type"];
 
 pub fn parse_command(input: &str) -> ParseCommandResult {
     let mut segments = input.split_whitespace();
@@ -38,9 +41,13 @@ pub fn parse_command(input: &str) -> ParseCommandResult {
 
         "echo" => {
             let message = segments.collect::<Vec<_>>().join(" ");
-            
+
             Ok(Command::Echo(message))
         }
+
+        "type" => Ok(Command::Type(
+            segments.map(|str| str.to_owned()).collect::<Vec<_>>(),
+        )),
 
         _ => Err(ParseCommandError("command not found".to_owned())),
     };
@@ -56,6 +63,19 @@ impl Command {
         match self {
             Command::Exit(status_code) => process::exit(status_code),
             Command::Echo(message) => Some(message),
+            Command::Type(command_names) => Some(
+                command_names
+                    .iter()
+                    .map(|command_name| {
+                        if BUILTIN_COMMANDS.contains(&command_name.as_str()) {
+                            format!("{} is a shell builtin", command_name)
+                        } else {
+                            format!("{}: command not found", command_name)
+                        }
+                    })
+                    .collect::<Vec<_>>()
+                    .join("\n"),
+            ),
             Command::ChangeDir(_) => todo!(),
         }
     }
