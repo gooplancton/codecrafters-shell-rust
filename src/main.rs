@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 #![allow(unused_imports)]
 
-use commands::{parse_command, CommandParseError};
+use commands::{parse_command, ParseCommandError, ParseCommandResult};
 use std::io::{self, Write};
 
 mod commands;
@@ -9,10 +9,10 @@ mod commands;
 fn eval(input: &str) -> Option<String> {
     let trimmed_input = input.trim_end_matches("\n");
 
-    let command = parse_command(trimmed_input);
+    let ParseCommandResult { command_name, command } = parse_command(trimmed_input);
     match command {
-        Err(CommandParseError(message)) => Some(format!("{}: {}", &trimmed_input, &message)),
-        Ok(command) => command.execute(),
+        Err(ParseCommandError(message)) => Some(format!("{}: {}", &command_name, &message)),
+        Ok(command) => command.execute()
     }
 }
 
