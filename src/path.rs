@@ -1,16 +1,24 @@
-use std::{ffi::OsString, fs, io::Error};
+use std::{collections::HashMap, ffi::OsString, fs::{self, metadata}, io::Error};
 
-fn list_executables_in_dir(path: &str) -> Result<Vec<String>, Error> {
+fn list_executables_in_dir(path: &str) -> Result<HashMap<String, String>, Error> {
     let read_dir = fs::read_dir(path)?;
-    let executables = read_dir
+    let entries: Vec<(String, String)> = read_dir
         .filter(|entry| entry.as_ref().map(|entry| entry.metadata().map(|meta| meta.is_file()).unwrap_or(false)).unwrap_or(false))
-        .map(|entry| entry.unwrap().file_name().to_string_lossy().to_string())
+        .map(|entry| {
+            let entry = entry.unwrap();
+            let executable = entry.file_name().to_string_lossy().to_string();
+            let path = entry.path().to_string_lossy().to_string();
+
+            (executable, path)
+        })
         .collect();
+
+    let executables = HashMap::from_iter(entries);
         
     return Ok(executables);
 }
 
-pub fn list_executables_in_path(path: &str) -> Vec<String> {
+pub fn list_executables_in_path(path: &str) -> HashMap<String, String> {
     path.split(":")    
         .filter_map(|dir| list_executables_in_dir(dir).ok())
         .flatten()

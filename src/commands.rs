@@ -75,8 +75,8 @@ impl Command {
                         .map(|command_name| {
                             if BUILTIN_COMMANDS.contains(&command_name.as_str()) {
                                 format!("{} is a shell builtin", command_name)
-                            } else if executables_in_path.contains(command_name) {
-                                format!("{} is an executable", command_name)
+                            } else if let Some(path) = executables_in_path.get(command_name) {
+                                format!("{} is {}", command_name, path)
                             } else {
                                 format!("{}: not found", command_name)
                             }
