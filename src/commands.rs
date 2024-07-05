@@ -1,4 +1,4 @@
-use std::{env, ffi::OsString, process, str::FromStr};
+use std::{env, process};
 
 use crate::path::list_executables_in_path;
 
@@ -10,6 +10,7 @@ pub enum Command {
     Echo(String),
     Type(Vec<String>),
     ChangeDir(NewDir),
+    Executable(String, Vec<String>),
 }
 
 #[derive(Debug)]
@@ -51,7 +52,15 @@ pub fn parse_command(input: &str) -> ParseCommandResult {
             segments.map(|str| str.to_owned()).collect::<Vec<_>>(),
         )),
 
-        _ => Err(ParseCommandError("command not found".to_owned())),
+        _ => {
+            let executables_in_path = list_executables_in_path();
+            if let Some(path) = executables_in_path.get(command_name) {
+                let args = segments.map(|str| str.to_string()).collect::<Vec<_>>();
+                Ok(Command::Executable(path.to_owned(), args))
+            } else {
+                Err(ParseCommandError("command not found".to_owned()))
+            }
+        }
     };
 
     return ParseCommandResult {
@@ -66,8 +75,7 @@ impl Command {
             Command::Exit(status_code) => process::exit(status_code),
             Command::Echo(message) => Some(message),
             Command::Type(command_names) => {
-                let path = env::var("PATH").unwrap_or_default();
-                let executables_in_path = list_executables_in_path(&path);
+                let executables_in_path = list_executables_in_path();
 
                 Some(
                     command_names
@@ -84,6 +92,16 @@ impl Command {
                         .collect::<Vec<_>>()
                         .join("\n"),
                 )
+            }
+
+            Command::Executable(command_path, args) => {
+                let _ = process::Command::new(command_path)
+                    .args(args)
+                    .spawn()
+                    .ok()?
+                    .wait_with_output();
+
+                None
             }
 
             Command::ChangeDir(_) => todo!(),

@@ -1,6 +1,3 @@
-#![allow(dead_code)]
-#![allow(unused_imports)]
-
 use commands::{parse_command, ParseCommandError, ParseCommandResult};
 use std::io::{self, Write};
 
