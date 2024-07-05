@@ -5,6 +5,7 @@ use commands::{parse_command, ParseCommandError, ParseCommandResult};
 use std::io::{self, Write};
 
 mod commands;
+mod path;
 
 fn eval(input: &str) -> Option<String> {
     let trimmed_input = input.trim_end_matches("\n");

@@ -1,4 +1,6 @@
-use std::process;
+use std::{env, ffi::OsString, process, str::FromStr};
+
+use crate::path::list_executables_in_path;
 
 type NewDir = String;
 type StatusCode = i32;
@@ -63,19 +65,27 @@ impl Command {
         match self {
             Command::Exit(status_code) => process::exit(status_code),
             Command::Echo(message) => Some(message),
-            Command::Type(command_names) => Some(
-                command_names
-                    .iter()
-                    .map(|command_name| {
-                        if BUILTIN_COMMANDS.contains(&command_name.as_str()) {
-                            format!("{} is a shell builtin", command_name)
-                        } else {
-                            format!("{}: not found", command_name)
-                        }
-                    })
-                    .collect::<Vec<_>>()
-                    .join("\n"),
-            ),
+            Command::Type(command_names) => {
+                let path = env::var("PATH").unwrap_or_default();
+                let executables_in_path = list_executables_in_path(&path);
+
+                Some(
+                    command_names
+                        .iter()
+                        .map(|command_name| {
+                            if BUILTIN_COMMANDS.contains(&command_name.as_str()) {
+                                format!("{} is a shell builtin", command_name)
+                            } else if executables_in_path.contains(command_name) {
+                                format!("{} is an executable", command_name)
+                            } else {
+                                format!("{}: not found", command_name)
+                            }
+                        })
+                        .collect::<Vec<_>>()
+                        .join("\n"),
+                )
+            }
+
             Command::ChangeDir(_) => todo!(),
         }
     }
