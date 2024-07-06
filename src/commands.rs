@@ -131,20 +131,30 @@ impl Command {
             }
 
             Command::ChangeDir(newdir) => {
-                let newdir = newdir.unwrap_or(env::var("HOME").unwrap());
+                let newdir = newdir
+                    .map(|newdir| {
+                        if newdir == "~" {
+                            env::var("HOME").unwrap()
+                        } else {
+                            newdir
+                        }
+                    })
+                    .unwrap_or(env::var("HOME").unwrap());
+
                 let metadata = fs::metadata(&newdir);
                 if let Err(err) = metadata {
                     let mut err_message = err.to_string();
                     if err_message.contains("No such file or directory") {
-                        err_message = String::from(format!("cd: {}: No such file or directory", newdir))
+                        err_message =
+                            String::from(format!("cd: {}: No such file or directory", newdir))
                     }
 
                     return Some(err_message);
                 } else if metadata.unwrap().is_dir() {
                     return match env::set_current_dir(newdir) {
                         Ok(_) => None,
-                        Err(err) => Some(err.to_string())
-                    } 
+                        Err(err) => Some(err.to_string()),
+                    };
                 } else {
                     return Some(format!("cd: {}, is not a directory", newdir));
                 }
