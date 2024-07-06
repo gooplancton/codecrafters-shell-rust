@@ -33,3 +33,4 @@ pub fn list_executables_in_path() -> HashMap<String, String> {
         .flatten()
         .collect()
 }
+

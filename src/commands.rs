@@ -131,11 +131,7 @@ impl Command {
             }
 
             Command::ChangeDir(newdir) => {
-                if newdir == None {
-                    return None
-                }
-
-                let newdir = newdir.unwrap();
+                let newdir = newdir.unwrap_or(env::var("HOME").unwrap());
                 let metadata = fs::metadata(&newdir);
                 if let Err(err) = metadata {
                     let mut err_message = err.to_string();
