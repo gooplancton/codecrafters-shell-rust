@@ -138,14 +138,19 @@ impl Command {
                 let newdir = newdir.unwrap();
                 let metadata = fs::metadata(&newdir);
                 if let Err(err) = metadata {
-                    return Some(err.to_string());
+                    let mut err_message = err.to_string();
+                    if err_message.contains("No such file or directory") {
+                        err_message = String::from(format!("cd: {}: No such file or directory", newdir))
+                    }
+
+                    return Some(err_message);
                 } else if metadata.unwrap().is_dir() {
                     return match env::set_current_dir(newdir) {
                         Ok(_) => None,
                         Err(err) => Some(err.to_string())
                     } 
                 } else {
-                    return Some("is not a directory".to_string());
+                    return Some(format!("cd: {}, is not a directory", newdir));
                 }
             }
         }
