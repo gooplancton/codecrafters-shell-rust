@@ -10,6 +10,7 @@ pub enum Command {
     Echo(String),
     Type(Vec<String>),
     ChangeDir(NewDir),
+    PrintWorkdir,
     Executable(String, Vec<String>),
 }
 
@@ -21,7 +22,7 @@ pub struct ParseCommandResult {
     pub command: Result<Command, ParseCommandError>,
 }
 
-const BUILTIN_COMMANDS: [&str; 3] = ["exit", "echo", "type"];
+const BUILTIN_COMMANDS: [&str; 4] = ["exit", "echo", "type", "pwd"];
 
 pub fn parse_command(input: &str) -> ParseCommandResult {
     let mut segments = input.split_whitespace();
@@ -46,6 +47,14 @@ pub fn parse_command(input: &str) -> ParseCommandResult {
             let message = segments.collect::<Vec<_>>().join(" ");
 
             Ok(Command::Echo(message))
+        }
+
+        "pwd" => {
+            if let Some(_) = segments.next() {
+                Err(ParseCommandError("too many arguments".to_string()))
+            } else {
+                Ok(Command::PrintWorkdir)
+            }
         }
 
         "type" => Ok(Command::Type(
@@ -102,6 +111,14 @@ impl Command {
                     .wait_with_output();
 
                 None
+            }
+
+            Command::PrintWorkdir => {
+                let workdir = env::current_dir()
+                    .map(|pathbuf| pathbuf.to_string_lossy().to_string())
+                    .unwrap_or_else(|err| err.to_string());
+
+                Some(workdir)
             }
 
             Command::ChangeDir(_) => todo!(),
