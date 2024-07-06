@@ -1,8 +1,8 @@
-use std::{env, process};
+use std::{env, fs, io, process};
 
 use crate::path::list_executables_in_path;
 
-type NewDir = String;
+type NewDir = Option<String>;
 type StatusCode = i32;
 
 pub enum Command {
@@ -22,7 +22,7 @@ pub struct ParseCommandResult {
     pub command: Result<Command, ParseCommandError>,
 }
 
-const BUILTIN_COMMANDS: [&str; 4] = ["exit", "echo", "type", "pwd"];
+const BUILTIN_COMMANDS: [&str; 5] = ["exit", "echo", "type", "pwd", "cd"];
 
 pub fn parse_command(input: &str) -> ParseCommandResult {
     let mut segments = input.split_whitespace();
@@ -60,6 +60,15 @@ pub fn parse_command(input: &str) -> ParseCommandResult {
         "type" => Ok(Command::Type(
             segments.map(|str| str.to_owned()).collect::<Vec<_>>(),
         )),
+
+        "cd" => {
+            let newdir = segments.next().map(|newdir| newdir.to_string());
+            if let Some(_) = segments.next() {
+                Err(ParseCommandError("too many arguments".to_string()))
+            } else {
+                Ok(Command::ChangeDir(newdir))
+            }
+        }
 
         _ => {
             let executables_in_path = list_executables_in_path();
@@ -121,7 +130,24 @@ impl Command {
                 Some(workdir)
             }
 
-            Command::ChangeDir(_) => todo!(),
+            Command::ChangeDir(newdir) => {
+                if newdir == None {
+                    return None
+                }
+
+                let newdir = newdir.unwrap();
+                let metadata = fs::metadata(&newdir);
+                if let Err(err) = metadata {
+                    return Some(err.to_string());
+                } else if metadata.unwrap().is_dir() {
+                    return match env::set_current_dir(newdir) {
+                        Ok(_) => None,
+                        Err(err) => Some(err.to_string())
+                    } 
+                } else {
+                    return Some("is not a directory".to_string());
+                }
+            }
         }
     }
 }
