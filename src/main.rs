@@ -9,10 +9,13 @@ mod path;
 fn eval(input: &str) -> Option<String> {
     let trimmed_input = input.trim_end_matches("\n");
 
-    let ParseCommandResult { command_name, command } = parse_command(trimmed_input);
+    let ParseCommandResult {
+        command_name,
+        command,
+    } = parse_command(trimmed_input);
     match command {
         Err(ParseCommandError(message)) => Some(format!("{}: {}", &command_name, &message)),
-        Ok(command) => command.execute()
+        Ok(command) => command.execute(),
     }
 }
 
@@ -28,7 +31,9 @@ fn main() {
 
         if input.len() > 1 {
             let output = eval(&input);
-            println!("{}", output.unwrap_or("".to_owned()));
+            if let Some(output) = output {
+                println!("{}", output);
+            }
         }
     }
 }
